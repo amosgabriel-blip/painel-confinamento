@@ -40,7 +40,36 @@
   header h1 { margin: 0; font-size: 1.3rem; font-weight: 600; }
   header .status { font-size: 0.8rem; color: #B9CFC9; }
 
+  nav.abas {
+    max-width: 1150px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--borda);
+    background: var(--bg);
+  }
+
+  nav.abas button {
+    border: none;
+    background: transparent;
+    padding: 14px 18px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--texto-suave);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+  }
+
+  nav.abas button.ativa {
+    color: var(--verde-escuro);
+    border-bottom-color: var(--laranja);
+  }
+
   main { max-width: 1150px; margin: 0 auto; padding: 24px; }
+
+  .pagina { display: none; }
+  .pagina.ativa { display: block; }
 
   .kpis {
     display: grid;
@@ -142,15 +171,15 @@
   .ocupacao-cell.alerta-cheio .mini-barra .preenchido { background: var(--laranja); }
   .ocupacao-cell.alerta-super .mini-barra .preenchido { background: var(--vermelho); }
 
-  .dietas-lista { display: flex; flex-wrap: wrap; gap: 10px; }
-  .dieta-chip {
+  .dietas-lista, .mes-lista { display: flex; flex-wrap: wrap; gap: 10px; }
+  .dieta-chip, .mes-chip {
     background: #EFF6F4;
     border: 1px solid var(--borda);
     border-radius: 20px;
     padding: 6px 14px;
     font-size: 0.85rem;
   }
-  .dieta-chip b { color: var(--verde-escuro); }
+  .dieta-chip b, .mes-chip b { color: var(--verde-escuro); }
 
   .badge {
     display: inline-block;
@@ -177,10 +206,14 @@
 
   footer { text-align: center; color: var(--texto-suave); font-size: 0.78rem; padding: 16px; }
 
-  .toggle-tabela {
-    max-height: 420px;
-    overflow-y: auto;
-  }
+  .toggle-tabela { max-height: 420px; overflow-y: auto; }
+
+  tr.linha-passada { opacity: 0.5; }
+
+  .barra-semana { display: flex; align-items: center; gap: 10px; }
+  .barra-semana .trilha { flex: 1; height: 10px; background: var(--borda); border-radius: 5px; overflow: hidden; }
+  .barra-semana .preenchido { height: 100%; background: var(--verde); }
+  .barra-semana .qtd { font-weight: 600; min-width: 42px; text-align: right; }
 </style>
 </head>
 <body>
@@ -190,76 +223,115 @@
   <span class="status" id="status">Carregando...</span>
 </header>
 
+<nav class="abas">
+  <button class="ativa" data-pagina="ocupacao" onclick="mudarAba('ocupacao')">Ocupação de Currais</button>
+  <button data-pagina="escala" onclick="mudarAba('escala')">Escala de Abate</button>
+</nav>
+
 <main>
   <div id="erro-container"></div>
-  <div id="alerta-container"></div>
 
-  <div class="kpis">
-    <div class="kpi">
-      <div class="label">Capacidade Total</div>
-      <div class="valor" id="kpi-capacidade">—</div>
+  <!-- PÁGINA: OCUPAÇÃO -->
+  <div class="pagina ativa" id="pagina-ocupacao">
+    <div id="alerta-container"></div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="label">Capacidade Total</div>
+        <div class="valor" id="kpi-capacidade">—</div>
+      </div>
+      <div class="kpi destaque">
+        <div class="label">Animais Confinados</div>
+        <div class="valor" id="kpi-ocupado">—</div>
+        <div class="barra-ocupacao"><div class="preenchido" id="barra-geral" style="width:0%"></div></div>
+      </div>
+      <div class="kpi">
+        <div class="label">Currais Ocupados / Vazios</div>
+        <div class="valor" id="kpi-currais">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Ocupação</div>
+        <div class="valor" id="kpi-percentual">—</div>
+      </div>
     </div>
-    <div class="kpi destaque">
-      <div class="label">Animais Confinados</div>
-      <div class="valor" id="kpi-ocupado">—</div>
-      <div class="barra-ocupacao"><div class="preenchido" id="barra-geral" style="width:0%"></div></div>
-    </div>
-    <div class="kpi">
-      <div class="label">Currais Ocupados / Vazios</div>
-      <div class="valor" id="kpi-currais">—</div>
-    </div>
-    <div class="kpi">
-      <div class="label">Ocupação</div>
-      <div class="valor" id="kpi-percentual">—</div>
-    </div>
+
+    <section>
+      <h2>Estágio de Confinamento</h2>
+      <div class="semaforo-grid" id="semaforo-grid"></div>
+    </section>
+
+    <section>
+      <h2>Animais por Dieta</h2>
+      <div class="dietas-lista" id="dietas-lista">
+        <div class="vazio-lista">Sem dados.</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Currais</h2>
+      <div class="toggle-tabela">
+        <table>
+          <thead><tr><th>Curral</th><th>Ocupação</th><th>Status</th></tr></thead>
+          <tbody id="tabela-currais">
+            <tr><td colspan="3" class="vazio-lista">Sem dados.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </div>
 
-  <section>
-    <h2>Estágio de Confinamento</h2>
-    <div class="semaforo-grid" id="semaforo-grid"></div>
-  </section>
+  <!-- PÁGINA: ESCALA DE ABATE -->
+  <div class="pagina" id="pagina-escala">
 
-  <section>
-    <h2>Animais por Dieta</h2>
-    <div class="dietas-lista" id="dietas-lista">
-      <div class="vazio-lista">Sem dados.</div>
-    </div>
-  </section>
+    <section>
+      <h2>Total Escalado por Mês</h2>
+      <div class="mes-lista" id="mes-lista">
+        <div class="vazio-lista">Sem dados.</div>
+      </div>
+    </section>
 
-  <section>
-    <h2>Currais</h2>
-    <div class="toggle-tabela">
-      <table>
-        <thead>
-          <tr><th>Curral</th><th>Ocupação</th><th>Status</th></tr>
-        </thead>
-        <tbody id="tabela-currais">
-          <tr><td colspan="3" class="vazio-lista">Sem dados.</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+    <section>
+      <h2>Quantidade por Semana</h2>
+      <div class="toggle-tabela">
+        <table>
+          <thead><tr><th>Semana</th><th>Quantidade</th></tr></thead>
+          <tbody id="tabela-semanas">
+            <tr><td colspan="2" class="vazio-lista">Sem dados.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-  <section>
-    <h2>Próximos Embarques (por data estimada de abate)</h2>
-    <div class="toggle-tabela">
-      <table>
-        <thead>
-          <tr><th>Data</th><th>Lote</th><th>Curral</th><th>Qtd. Animais</th><th>Dias Confin.</th></tr>
-        </thead>
-        <tbody id="tabela-embarques">
-          <tr><td colspan="5" class="vazio-lista">Sem dados.</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
+    <section>
+      <h2>Escala Dia a Dia</h2>
+      <div class="toggle-tabela">
+        <table>
+          <thead>
+            <tr><th>Embarque</th><th>Abate</th><th>Categoria</th><th>Qtd.</th><th>Mercado</th><th>Destino</th></tr>
+          </thead>
+          <tbody id="tabela-dia-a-dia">
+            <tr><td colspan="6" class="vazio-lista">Sem dados.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 </main>
 
 <footer>Painel de Confinamento — Grupo Otávio Lage</footer>
 
 <script>
 // ⚠️ Cole aqui a URL do App da Web publicado no Apps Script
-const API_URL = "https://script.google.com/macros/s/AKfycbyL-w6d5KnfMEsmwOYPXUvLekG7bXQv3M5I74GSwDw1zq1jkYJ7luCKwNTn-0OuJgP4qg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwYrraS4nFWZPBu5aVOfmo52gzzzescUMXhii88H_f-EMsIz3XuJq66u_HVosLjN8t3EQ/exec";
+
+function mudarAba(pagina) {
+  document.querySelectorAll(".pagina").forEach(function (el) {
+    el.classList.toggle("ativa", el.id === "pagina-" + pagina);
+  });
+  document.querySelectorAll("nav.abas button").forEach(function (btn) {
+    btn.classList.toggle("ativa", btn.dataset.pagina === pagina);
+  });
+}
 
 async function carregarDados() {
   const statusEl = document.getElementById("status");
@@ -286,6 +358,11 @@ async function carregarDados() {
 }
 
 function render(dados) {
+  renderOcupacao(dados);
+  renderEscala(dados);
+}
+
+function renderOcupacao(dados) {
   const resumo = dados.resumo || {};
   const capacidadeTotal = resumo.capacidadeTotal || 0;
   const ocupadoTotal = resumo.ocupadoTotal || 0;
@@ -297,7 +374,6 @@ function render(dados) {
   document.getElementById("kpi-percentual").textContent = percentual + "%";
   document.getElementById("barra-geral").style.width = Math.min(percentual, 100) + "%";
 
-  // Alerta de currais sem capacidade cadastrada
   const alertaContainer = document.getElementById("alerta-container");
   const semCapacidade = resumo.curraisSemCapacidade || [];
   if (semCapacidade.length > 0) {
@@ -308,7 +384,6 @@ function render(dados) {
     alertaContainer.innerHTML = "";
   }
 
-  // Semáforo de estágio de confinamento
   const semaforoGrid = document.getElementById("semaforo-grid");
   const semaforo = dados.semaforo || [];
   const classePorEstagio = {
@@ -331,7 +406,6 @@ function render(dados) {
     })
     .join("");
 
-  // Dietas
   const dietasLista = document.getElementById("dietas-lista");
   const porDieta = resumo.porDieta || {};
   const dietasKeys = Object.keys(porDieta);
@@ -346,7 +420,6 @@ function render(dados) {
       .join("");
   }
 
-  // Currais
   const tabelaCurrais = document.getElementById("tabela-currais");
   const currais = dados.currais || [];
   if (currais.length === 0) {
@@ -376,22 +449,66 @@ function render(dados) {
       })
       .join("");
   }
+}
 
-  // Embarques
-  const tabelaEmbarques = document.getElementById("tabela-embarques");
-  const embarques = dados.embarques || [];
-  if (embarques.length === 0) {
-    tabelaEmbarques.innerHTML = '<tr><td colspan="5" class="vazio-lista">Nenhum embarque previsto.</td></tr>';
+function renderEscala(dados) {
+  const escala = dados.escala || {};
+
+  // Total por mês
+  const mesLista = document.getElementById("mes-lista");
+  const porMes = escala.porMes || [];
+  if (porMes.length === 0) {
+    mesLista.innerHTML = '<div class="vazio-lista">Sem dados.</div>';
   } else {
-    tabelaEmbarques.innerHTML = embarques
-      .map(function (emb) {
+    mesLista.innerHTML = porMes
+      .map(function (m) {
+        return '<div class="mes-chip"><b>' + Number(m.qtde).toLocaleString("pt-BR") + '</b> — ' + m.mes + '</div>';
+      })
+      .join("");
+  }
+
+  // Quantidade por semana
+  const tabelaSemanas = document.getElementById("tabela-semanas");
+  const porSemana = escala.porSemana || [];
+  if (porSemana.length === 0) {
+    tabelaSemanas.innerHTML = '<tr><td colspan="2" class="vazio-lista">Sem dados.</td></tr>';
+  } else {
+    const maxSemana = Math.max.apply(null, porSemana.map(function (s) { return s.qtde; }));
+    tabelaSemanas.innerHTML = porSemana
+      .map(function (s) {
+        const pct = maxSemana > 0 ? Math.round((s.qtde / maxSemana) * 100) : 0;
+        const label = formatarData(s.inicio) + " a " + formatarData(s.fim);
         return (
-          "<tr>" +
-          "<td>" + formatarData(emb.dataPrevista) + "</td>" +
-          "<td>" + (emb.lote || "-") + "</td>" +
-          "<td>" + (emb.curral || "-") + "</td>" +
-          "<td>" + (emb.qtdAnimais || "-") + "</td>" +
-          "<td>" + (emb.diasConfinamento || "-") + "</td>" +
+          "<tr><td>" + label + "</td><td>" +
+          '<div class="barra-semana"><div class="trilha"><div class="preenchido" style="width:' + pct + '%"></div></div>' +
+          '<span class="qtd">' + Number(s.qtde).toLocaleString("pt-BR") + '</span></div>' +
+          "</td></tr>"
+        );
+      })
+      .join("");
+  }
+
+  // Dia a dia
+  const tabelaDiaADia = document.getElementById("tabela-dia-a-dia");
+  const diaADia = escala.diaADia || [];
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  if (diaADia.length === 0) {
+    tabelaDiaADia.innerHTML = '<tr><td colspan="6" class="vazio-lista">Sem dados.</td></tr>';
+  } else {
+    tabelaDiaADia.innerHTML = diaADia
+      .map(function (l) {
+        const dataEmb = new Date(l.dataEmbarque);
+        const classe = !isNaN(dataEmb) && dataEmb < hoje ? " linha-passada" : "";
+        return (
+          '<tr class="' + classe.trim() + '">' +
+          "<td>" + formatarData(l.dataEmbarque) + "</td>" +
+          "<td>" + formatarData(l.dataAbate) + "</td>" +
+          "<td>" + (l.categoria || "-") + "</td>" +
+          "<td>" + (l.qtde || "-") + "</td>" +
+          "<td>" + (l.mercado || "-") + "</td>" +
+          "<td>" + (l.destino || "-") + "</td>" +
           "</tr>"
         );
       })
