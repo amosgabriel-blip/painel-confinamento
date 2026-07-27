@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Confinamento — Vera Cruz</title>
+<style>
+  :root {
+    --laranja: #F97316;
+    --verde: #268A75;
+    --verde-escuro: #1A3530;
+    --vermelho: #C0392B;
+    --bg: #F5F7F6;
+    --card: #FFFFFF;
+    --texto: #1A2422;
+    --texto-suave: #6B7A76;
+    --borda: #E3E8E6;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--texto);
+  }
+
+  header {
+    background: var(--verde-escuro);
+    color: #fff;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  header h1 { margin: 0; font-size: 1.3rem; font-weight: 600; }
+  header .status { font-size: 0.8rem; color: #B9CFC9; }
+
+  main { max-width: 1150px; margin: 0 auto; padding: 24px; }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+
+  .kpi .label {
+    font-size: 0.8rem;
+    color: var(--texto-suave);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .kpi .valor {
+    font-size: 1.9rem;
+    font-weight: 700;
+    margin-top: 4px;
+    color: var(--verde-escuro);
+  }
+
+  .kpi.destaque .valor { color: var(--laranja); }
+
+  .barra-ocupacao {
+    margin-top: 10px;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--borda);
+    overflow: hidden;
+  }
+  .barra-ocupacao .preenchido { height: 100%; background: var(--verde); }
+
+  .alerta {
+    background: #FFF7E6;
+    border: 1px solid #F5D68A;
+    color: #7A5A00;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.85rem;
+  }
+
+  section {
+    background: var(--card);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  section h2 {
+    margin: 0 0 16px 0;
+    font-size: 1.05rem;
+    color: var(--verde-escuro);
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--borda); }
+  th {
+    color: var(--texto-suave);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .semaforo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  .semaforo-item {
+    border-radius: 8px;
+    padding: 14px;
+    border: 1px solid var(--borda);
+  }
+  .semaforo-item .nome { font-size: 0.8rem; color: var(--texto-suave); }
+  .semaforo-item .num { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
+  .semaforo-item .sub { font-size: 0.78rem; color: var(--texto-suave); margin-top: 2px; }
+
+  .semaforo-item.adaptando { border-left: 4px solid #7FB3D5; }
+  .semaforo-item.transicao { border-left: 4px solid #F4D03F; }
+  .semaforo-item.engordando { border-left: 4px solid var(--verde); }
+  .semaforo-item.prontos { border-left: 4px solid var(--laranja); }
+  .semaforo-item.atrasados { border-left: 4px solid var(--vermelho); }
+  .semaforo-item.atrasados .num { color: var(--vermelho); }
+
+  .ocupacao-cell { display: flex; align-items: center; gap: 8px; min-width: 140px; }
+  .ocupacao-cell .mini-barra { flex: 1; height: 6px; border-radius: 3px; background: var(--borda); overflow: hidden; }
+  .ocupacao-cell .mini-barra .preenchido { height: 100%; background: var(--verde); }
+  .ocupacao-cell.alerta-cheio .mini-barra .preenchido { background: var(--laranja); }
+  .ocupacao-cell.alerta-super .mini-barra .preenchido { background: var(--vermelho); }
+
+  .dietas-lista { display: flex; flex-wrap: wrap; gap: 10px; }
+  .dieta-chip {
+    background: #EFF6F4;
+    border: 1px solid var(--borda);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+  }
+  .dieta-chip b { color: var(--verde-escuro); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .badge.vazio { background: #EAF0EF; color: var(--texto-suave); }
+  .badge.ocupado { background: #E6F3EF; color: var(--verde); }
+  .badge.quase-cheio { background: #FFF1E6; color: var(--laranja); }
+  .badge.superlotado { background: #FBE4E1; color: var(--vermelho); }
+
+  .vazio-lista { color: var(--texto-suave); font-size: 0.9rem; padding: 12px 0; }
+  .erro {
+    background: #FDEDED;
+    border: 1px solid #F3B5B5;
+    color: #9B2C2C;
+    padding: 14px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+  }
+
+  footer { text-align: center; color: var(--texto-suave); font-size: 0.78rem; padding: 16px; }
+
+  .toggle-tabela {
+    max-height: 420px;
+    overflow-y: auto;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Painel de Confinamento — Vera Cruz</h1>
+  <span class="status" id="status">Carregando...</span>
+</header>
+
+<main>
+  <div id="erro-container"></div>
+  <div id="alerta-container"></div>
+
+  <div class="kpis">
+    <div class="kpi">
+      <div class="label">Capacidade Total</div>
+      <div class="valor" id="kpi-capacidade">—</div>
+    </div>
+    <div class="kpi destaque">
+      <div class="label">Animais Confinados</div>
+      <div class="valor" id="kpi-ocupado">—</div>
+      <div class="barra-ocupacao"><div class="preenchido" id="barra-geral" style="width:0%"></div></div>
+    </div>
+    <div class="kpi">
+      <div class="label">Currais Ocupados / Vazios</div>
+      <div class="valor" id="kpi-currais">—</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Ocupação</div>
+      <div class="valor" id="kpi-percentual">—</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Estágio de Confinamento</h2>
+    <div class="semaforo-grid" id="semaforo-grid"></div>
+  </section>
+
+  <section>
+    <h2>Animais por Dieta</h2>
+    <div class="dietas-lista" id="dietas-lista">
+      <div class="vazio-lista">Sem dados.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Currais</h2>
+    <div class="toggle-tabela">
+      <table>
+        <thead>
+          <tr><th>Curral</th><th>Ocupação</th><th>Status</th></tr>
+        </thead>
+        <tbody id="tabela-currais">
+          <tr><td colspan="3" class="vazio-lista">Sem dados.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Próximos Embarques (por data estimada de abate)</h2>
+    <div class="toggle-tabela">
+      <table>
+        <thead>
+          <tr><th>Data</th><th>Lote</th><th>Curral</th><th>Qtd. Animais</th><th>Dias Confin.</th></tr>
+        </thead>
+        <tbody id="tabela-embarques">
+          <tr><td colspan="5" class="vazio-lista">Sem dados.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>Painel de Confinamento — Grupo Otávio Lage</footer>
+
+<script>
+// ⚠️ Cole aqui a URL do App da Web publicado no Apps Script
+const API_URL = "https://script.google.com/macros/s/AKfycbyL-w6d5KnfMEsmwOYPXUvLekG7bXQv3M5I74GSwDw1zq1jkYJ7luCKwNTn-0OuJgP4qg/exec";
+
+async function carregarDados() {
+  const statusEl = document.getElementById("status");
+  const erroContainer = document.getElementById("erro-container");
+
+  if (API_URL.includes("COLE_AQUI")) {
+    erroContainer.innerHTML = '<div class="erro">Configure a URL do Apps Script na constante API_URL, dentro do código deste arquivo.</div>';
+    statusEl.textContent = "Não configurado";
+    return;
+  }
+
+  try {
+    statusEl.textContent = "Atualizando...";
+    const resp = await fetch(API_URL);
+    if (!resp.ok) throw new Error("Falha na requisição: " + resp.status);
+    const dados = await resp.json();
+    render(dados);
+    const hora = new Date(dados.atualizadoEm).toLocaleTimeString("pt-BR");
+    statusEl.textContent = "Atualizado às " + hora;
+  } catch (err) {
+    erroContainer.innerHTML = '<div class="erro">Não foi possível carregar os dados: ' + err.message + '</div>';
+    statusEl.textContent = "Erro ao atualizar";
+  }
+}
+
+function render(dados) {
+  const resumo = dados.resumo || {};
+  const capacidadeTotal = resumo.capacidadeTotal || 0;
+  const ocupadoTotal = resumo.ocupadoTotal || 0;
+  const percentual = capacidadeTotal > 0 ? Math.round((ocupadoTotal / capacidadeTotal) * 100) : 0;
+
+  document.getElementById("kpi-capacidade").textContent = Math.round(capacidadeTotal).toLocaleString("pt-BR");
+  document.getElementById("kpi-ocupado").textContent = ocupadoTotal.toLocaleString("pt-BR");
+  document.getElementById("kpi-currais").textContent = (resumo.curraisOcupados || 0) + " / " + (resumo.curraisVazios || 0);
+  document.getElementById("kpi-percentual").textContent = percentual + "%";
+  document.getElementById("barra-geral").style.width = Math.min(percentual, 100) + "%";
+
+  // Alerta de currais sem capacidade cadastrada
+  const alertaContainer = document.getElementById("alerta-container");
+  const semCapacidade = resumo.curraisSemCapacidade || [];
+  if (semCapacidade.length > 0) {
+    alertaContainer.innerHTML = '<div class="alerta">⚠ ' + semCapacidade.length +
+      ' curral(is) sem capacidade cadastrada (não entram na ocupação): ' +
+      semCapacidade.join(", ") + '.</div>';
+  } else {
+    alertaContainer.innerHTML = "";
+  }
+
+  // Semáforo de estágio de confinamento
+  const semaforoGrid = document.getElementById("semaforo-grid");
+  const semaforo = dados.semaforo || [];
+  const classePorEstagio = {
+    "Adaptando": "adaptando",
+    "Em transição": "transicao",
+    "Engordando": "engordando",
+    "Prontos p/ abate": "prontos",
+    "Atrasados p/ abate": "atrasados"
+  };
+  semaforoGrid.innerHTML = semaforo
+    .map(function (s) {
+      const classe = classePorEstagio[s.estagio] || "";
+      return (
+        '<div class="semaforo-item ' + classe + '">' +
+        '<div class="nome">' + s.estagio + '</div>' +
+        '<div class="num">' + s.nAnimais.toLocaleString("pt-BR") + '</div>' +
+        '<div class="sub">' + s.nLotes + ' lote(s)</div>' +
+        '</div>'
+      );
+    })
+    .join("");
+
+  // Dietas
+  const dietasLista = document.getElementById("dietas-lista");
+  const porDieta = resumo.porDieta || {};
+  const dietasKeys = Object.keys(porDieta);
+  if (dietasKeys.length === 0) {
+    dietasLista.innerHTML = '<div class="vazio-lista">Sem dados.</div>';
+  } else {
+    dietasLista.innerHTML = dietasKeys
+      .sort(function (a, b) { return porDieta[b] - porDieta[a]; })
+      .map(function (dieta) {
+        return '<div class="dieta-chip"><b>' + porDieta[dieta].toLocaleString("pt-BR") + '</b> — ' + dieta + '</div>';
+      })
+      .join("");
+  }
+
+  // Currais
+  const tabelaCurrais = document.getElementById("tabela-currais");
+  const currais = dados.currais || [];
+  if (currais.length === 0) {
+    tabelaCurrais.innerHTML = '<tr><td colspan="3" class="vazio-lista">Sem dados.</td></tr>';
+  } else {
+    const statusClasse = {
+      "Vazio": "vazio",
+      "Ocupado": "ocupado",
+      "Quase cheio": "quase-cheio",
+      "Superlotado": "superlotado"
+    };
+    tabelaCurrais.innerHTML = currais
+      .map(function (c) {
+        const pct = Math.round((c.percentual || 0) * 100);
+        const alertaClasse = pct >= 100 ? " alerta-super" : (pct >= 95 ? " alerta-cheio" : "");
+        const badgeClasse = statusClasse[c.status] || "ocupado";
+        return (
+          "<tr>" +
+          "<td>" + c.curral + "</td>" +
+          '<td><div class="ocupacao-cell' + alertaClasse + '">' +
+            '<span>' + c.ocupado + "/" + Math.round(c.capacidade) + "</span>" +
+            '<div class="mini-barra"><div class="preenchido" style="width:' + Math.min(pct, 100) + '%"></div></div>' +
+          "</div></td>" +
+          '<td><span class="badge ' + badgeClasse + '">' + c.status + "</span></td>" +
+          "</tr>"
+        );
+      })
+      .join("");
+  }
+
+  // Embarques
+  const tabelaEmbarques = document.getElementById("tabela-embarques");
+  const embarques = dados.embarques || [];
+  if (embarques.length === 0) {
+    tabelaEmbarques.innerHTML = '<tr><td colspan="5" class="vazio-lista">Nenhum embarque previsto.</td></tr>';
+  } else {
+    tabelaEmbarques.innerHTML = embarques
+      .map(function (emb) {
+        return (
+          "<tr>" +
+          "<td>" + formatarData(emb.dataPrevista) + "</td>" +
+          "<td>" + (emb.lote || "-") + "</td>" +
+          "<td>" + (emb.curral || "-") + "</td>" +
+          "<td>" + (emb.qtdAnimais || "-") + "</td>" +
+          "<td>" + (emb.diasConfinamento || "-") + "</td>" +
+          "</tr>"
+        );
+      })
+      .join("");
+  }
+}
+
+function formatarData(valor) {
+  if (!valor) return "-";
+  const d = new Date(valor);
+  if (isNaN(d)) return valor;
+  return d.toLocaleDateString("pt-BR");
+}
+
+carregarDados();
+setInterval(carregarDados, 5 * 60 * 1000); // atualiza a cada 5 minutos
+</script>
+
+</body>
+</html>
