@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel Confinamento — Vera Cruz</title>
+<title>Painel de Confinamento — Vera Cruz</title>
 <style>
   :root {
     --laranja: #F97316;
@@ -120,6 +120,58 @@
     font-size: 0.85rem;
   }
 
+  .filtros {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+
+  .filtros label {
+    font-size: 0.75rem;
+    color: var(--texto-suave);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .filtros select {
+    padding: 7px 10px;
+    border: 1px solid var(--borda);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 0.85rem;
+    color: var(--texto);
+    min-width: 150px;
+  }
+
+  .filtros input[type="date"] {
+    padding: 6px 10px;
+    border: 1px solid var(--borda);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 0.85rem;
+    color: var(--texto);
+  }
+
+  .filtros button {
+    border: 1px solid var(--borda);
+    background: #fff;
+    color: var(--texto-suave);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    align-self: flex-end;
+  }
+  .filtros button:hover { border-color: var(--laranja); color: var(--laranja); }
+
   section {
     background: var(--card);
     border: 1px solid var(--borda);
@@ -143,27 +195,6 @@
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
-
-  .semaforo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
-  }
-  .semaforo-item {
-    border-radius: 8px;
-    padding: 14px;
-    border: 1px solid var(--borda);
-  }
-  .semaforo-item .nome { font-size: 0.8rem; color: var(--texto-suave); }
-  .semaforo-item .num { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
-  .semaforo-item .sub { font-size: 0.78rem; color: var(--texto-suave); margin-top: 2px; }
-
-  .semaforo-item.adaptando { border-left: 4px solid #7FB3D5; }
-  .semaforo-item.transicao { border-left: 4px solid #F4D03F; }
-  .semaforo-item.engordando { border-left: 4px solid var(--verde); }
-  .semaforo-item.prontos { border-left: 4px solid var(--laranja); }
-  .semaforo-item.atrasados { border-left: 4px solid var(--vermelho); }
-  .semaforo-item.atrasados .num { color: var(--vermelho); }
 
   tr.linha-adaptando td:first-child { border-left: 4px solid #7FB3D5; }
   tr.linha-transicao td:first-child { border-left: 4px solid #F4D03F; }
@@ -233,6 +264,7 @@
 <nav class="abas">
   <button class="ativa" data-pagina="ocupacao" onclick="mudarAba('ocupacao')">Ocupação de Currais</button>
   <button data-pagina="escala" onclick="mudarAba('escala')">Escala de Abate</button>
+  <button data-pagina="chegadas" onclick="mudarAba('chegadas')">Chegadas de Boi</button>
 </nav>
 
 <main>
@@ -283,13 +315,25 @@
       </div>
     </section>
 
+    <div class="filtros">
+      <div>
+        <label for="filtro-dieta">Dieta</label>
+        <select id="filtro-dieta" onchange="aplicarFiltrosOcupacao()"><option value="">Todas as dietas</option></select>
+      </div>
+      <div>
+        <label for="filtro-status">Status do curral</label>
+        <select id="filtro-status" onchange="aplicarFiltrosOcupacao()"><option value="">Todos os status</option></select>
+      </div>
+      <button onclick="limparFiltrosOcupacao()">Limpar filtros</button>
+    </div>
+
     <section>
       <h2>Currais Ocupados</h2>
       <div class="toggle-tabela">
         <table>
-          <thead><tr><th>Curral</th><th>Ocupação</th><th>Status</th></tr></thead>
+          <thead><tr><th>Curral</th><th>Ocupação</th><th>Dieta</th><th>Status</th></tr></thead>
           <tbody id="tabela-currais-ocupados">
-            <tr><td colspan="3" class="vazio-lista">Sem dados.</td></tr>
+            <tr><td colspan="4" class="vazio-lista">Sem dados.</td></tr>
           </tbody>
         </table>
       </div>
@@ -310,6 +354,22 @@
 
   <!-- PÁGINA: ESCALA DE ABATE -->
   <div class="pagina" id="pagina-escala">
+
+    <div class="filtros">
+      <div>
+        <label for="filtro-mes">Mês</label>
+        <select id="filtro-mes" onchange="aplicarFiltrosEscala()"><option value="">Todos os meses</option></select>
+      </div>
+      <div>
+        <label for="filtro-mercado">Mercado</label>
+        <select id="filtro-mercado" onchange="aplicarFiltrosEscala()"><option value="">Todos os mercados</option></select>
+      </div>
+      <div>
+        <label for="filtro-destino">Destino</label>
+        <select id="filtro-destino" onchange="aplicarFiltrosEscala()"><option value="">Todos os destinos</option></select>
+      </div>
+      <button onclick="limparFiltrosEscala()">Limpar filtros</button>
+    </div>
 
     <section>
       <h2>Total Escalado por Mês</h2>
@@ -344,13 +404,76 @@
       </div>
     </section>
   </div>
+
+  <!-- PÁGINA: CHEGADAS DE BOI -->
+  <div class="pagina" id="pagina-chegadas">
+
+    <div class="kpis">
+      <div class="kpi destaque">
+        <div class="label">Animais Recebidos (30 dias)</div>
+        <div class="valor" id="kpi-chegadas-total">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Lançamentos (30 dias)</div>
+        <div class="valor" id="kpi-chegadas-lancamentos">—</div>
+      </div>
+      <div class="kpi">
+        <div class="label">Com Morbidade (30 dias)</div>
+        <div class="valor" id="kpi-chegadas-morbidade">—</div>
+      </div>
+    </div>
+
+    <div class="filtros">
+      <div>
+        <label for="filtro-fornecedor">Fornecedor</label>
+        <select id="filtro-fornecedor" onchange="aplicarFiltrosChegadas()"><option value="">Todos os fornecedores</option></select>
+      </div>
+      <div>
+        <label for="filtro-mes-chegada">Mês</label>
+        <select id="filtro-mes-chegada" onchange="aplicarFiltrosChegadas()"><option value="">Todos os meses</option></select>
+      </div>
+      <div>
+        <label for="filtro-data-inicio">De</label>
+        <input type="date" id="filtro-data-inicio" onchange="aplicarFiltrosChegadas()">
+      </div>
+      <div>
+        <label for="filtro-data-fim">Até</label>
+        <input type="date" id="filtro-data-fim" onchange="aplicarFiltrosChegadas()">
+      </div>
+      <div>
+        <label for="filtro-origem">Origem</label>
+        <select id="filtro-origem" onchange="aplicarFiltrosChegadas()"><option value="">Todas as origens</option></select>
+      </div>
+      <div>
+        <label for="filtro-curral-chegada">Curral de Desembarque</label>
+        <select id="filtro-curral-chegada" onchange="aplicarFiltrosChegadas()"><option value="">Todos os currais</option></select>
+      </div>
+      <button onclick="limparFiltrosChegadas()">Limpar filtros</button>
+    </div>
+
+    <section>
+      <h2>Lançamentos de Chegada</h2>
+      <div class="toggle-tabela">
+        <table>
+          <thead>
+            <tr><th>Data</th><th>Fornecedor</th><th>Qtd.</th><th>Curral</th><th>Morbidade</th><th>Responsável</th><th>Origem</th></tr>
+          </thead>
+          <tbody id="tabela-chegadas">
+            <tr><td colspan="7" class="vazio-lista">Sem dados.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 </main>
 
 <footer>Painel de Confinamento — Grupo Otávio Lage</footer>
 
 <script>
 // ⚠️ Cole aqui a URL do App da Web publicado no Apps Script
-const API_URL = "https://script.google.com/macros/s/AKfycbwbJ-fvwEY8PcGZiK66RWOnR3kELqqbs3VTSU1x_Ch9vt6PDSQzNns-HAf7c3h_n31-tg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxMqcClxguq0XSE-o12BBNR1Ws-HnJndo-VfH8Dv4veECSZx81sUFwRjdFvKH6vxgJCvw/exec";
+
+let dadosGlobais = null;
 
 function mudarAba(pagina) {
   document.querySelectorAll(".pagina").forEach(function (el) {
@@ -376,7 +499,12 @@ async function carregarDados() {
     const resp = await fetch(API_URL);
     if (!resp.ok) throw new Error("Falha na requisição: " + resp.status);
     const dados = await resp.json();
-    render(dados);
+    dadosGlobais = dados;
+    renderOcupacaoBase(dados);
+    popularFiltros(dados);
+    aplicarFiltrosOcupacao();
+    aplicarFiltrosEscala();
+    aplicarFiltrosChegadas();
     const hora = new Date(dados.atualizadoEm).toLocaleTimeString("pt-BR");
     statusEl.textContent = "Atualizado às " + hora;
   } catch (err) {
@@ -385,12 +513,187 @@ async function carregarDados() {
   }
 }
 
-function render(dados) {
-  renderOcupacao(dados);
-  renderEscala(dados);
+// ---------- FILTROS ----------
+
+function preencherSelect(select, valores, labelTodos) {
+  const atual = select.value;
+  select.innerHTML = '<option value="">' + labelTodos + '</option>' +
+    valores.map(function (v) { return '<option value="' + v + '">' + v + '</option>'; }).join("");
+  if (valores.indexOf(atual) !== -1) select.value = atual;
 }
 
-function renderOcupacao(dados) {
+function popularFiltros(dados) {
+  const curraisOcupados = dados.curraisOcupados || [];
+  const dietas = Array.from(new Set(curraisOcupados.map(function (c) { return c.dieta; }).filter(Boolean))).sort();
+  const statusList = Array.from(new Set(curraisOcupados.map(function (c) { return c.status; }).filter(Boolean))).sort();
+  preencherSelect(document.getElementById("filtro-dieta"), dietas, "Todas as dietas");
+  preencherSelect(document.getElementById("filtro-status"), statusList, "Todos os status");
+
+  const diaADia = (dados.escala && dados.escala.diaADia) || [];
+  const meses = Array.from(new Set(diaADia.map(function (l) { return l.mes; }).filter(Boolean)));
+  const mercados = Array.from(new Set(diaADia.map(function (l) { return l.mercado; }).filter(Boolean))).sort();
+  const destinos = Array.from(new Set(diaADia.map(function (l) { return l.destino; }).filter(Boolean))).sort();
+  preencherSelect(document.getElementById("filtro-mes"), meses, "Todos os meses");
+  preencherSelect(document.getElementById("filtro-mercado"), mercados, "Todos os mercados");
+  preencherSelect(document.getElementById("filtro-destino"), destinos, "Todos os destinos");
+
+  const listaChegadas = (dados.chegadas && dados.chegadas.lista) || [];
+  const fornecedores = Array.from(new Set(listaChegadas.map(function (l) { return l.fornecedor; }).filter(Boolean))).sort();
+  const origens = Array.from(new Set(listaChegadas.map(function (l) { return l.origem; }).filter(Boolean))).sort();
+  const curraisChegada = Array.from(new Set(listaChegadas.map(function (l) { return l.curral; }).filter(Boolean))).sort();
+  const mesesChegada = Array.from(new Set(
+    listaChegadas
+      .map(function (l) { return rotuloMes(l.data); })
+      .filter(Boolean)
+  )).sort(function (a, b) { return chaveOrdemMes(b) - chaveOrdemMes(a); }); // mais recente primeiro
+  preencherSelect(document.getElementById("filtro-fornecedor"), fornecedores, "Todos os fornecedores");
+  preencherSelect(document.getElementById("filtro-origem"), origens, "Todas as origens");
+  preencherSelect(document.getElementById("filtro-curral-chegada"), curraisChegada, "Todos os currais");
+  preencherSelect(document.getElementById("filtro-mes-chegada"), mesesChegada, "Todos os meses");
+}
+
+// Rótulo tipo "Julho/2026" a partir de uma data
+function rotuloMes(valor) {
+  const d = new Date(valor);
+  if (isNaN(d)) return null;
+  const nome = d.toLocaleDateString("pt-BR", { month: "long" });
+  const capitalizado = nome.charAt(0).toUpperCase() + nome.slice(1);
+  return capitalizado + "/" + d.getFullYear();
+}
+
+// Chave numérica (AAAAMM) para ordenar rótulos "Mês/Ano" cronologicamente
+function chaveOrdemMes(rotulo) {
+  const partes = rotulo.split("/");
+  const meses = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  const indice = meses.indexOf(partes[0].toLowerCase());
+  return Number(partes[1]) * 100 + (indice + 1);
+}
+
+function limparFiltrosOcupacao() {
+  document.getElementById("filtro-dieta").value = "";
+  document.getElementById("filtro-status").value = "";
+  aplicarFiltrosOcupacao();
+}
+
+function limparFiltrosEscala() {
+  document.getElementById("filtro-mes").value = "";
+  document.getElementById("filtro-mercado").value = "";
+  document.getElementById("filtro-destino").value = "";
+  aplicarFiltrosEscala();
+}
+
+function limparFiltrosChegadas() {
+  document.getElementById("filtro-fornecedor").value = "";
+  document.getElementById("filtro-origem").value = "";
+  document.getElementById("filtro-curral-chegada").value = "";
+  document.getElementById("filtro-mes-chegada").value = "";
+  document.getElementById("filtro-data-inicio").value = "";
+  document.getElementById("filtro-data-fim").value = "";
+  aplicarFiltrosChegadas();
+}
+
+function aplicarFiltrosOcupacao() {
+  if (!dadosGlobais) return;
+  const dieta = document.getElementById("filtro-dieta").value;
+  const status = document.getElementById("filtro-status").value;
+  let lista = dadosGlobais.curraisOcupados || [];
+  if (dieta) lista = lista.filter(function (c) { return c.dieta === dieta; });
+  if (status) lista = lista.filter(function (c) { return c.status === status; });
+  renderTabelaCurraisOcupados(lista);
+}
+
+function aplicarFiltrosEscala() {
+  if (!dadosGlobais) return;
+  const mes = document.getElementById("filtro-mes").value;
+  const mercado = document.getElementById("filtro-mercado").value;
+  const destino = document.getElementById("filtro-destino").value;
+  let lista = (dadosGlobais.escala && dadosGlobais.escala.diaADia) || [];
+  if (mes) lista = lista.filter(function (l) { return l.mes === mes; });
+  if (mercado) lista = lista.filter(function (l) { return l.mercado === mercado; });
+  if (destino) lista = lista.filter(function (l) { return l.destino === destino; });
+
+  renderTabelaDiaADia(lista);
+  renderTotalPorMes(agregarPorMes(lista));
+  renderPorSemana(agregarPorSemana(lista));
+}
+
+function aplicarFiltrosChegadas() {
+  if (!dadosGlobais) return;
+  const fornecedor = document.getElementById("filtro-fornecedor").value;
+  const origem = document.getElementById("filtro-origem").value;
+  const curral = document.getElementById("filtro-curral-chegada").value;
+  const mes = document.getElementById("filtro-mes-chegada").value;
+  const dataInicio = document.getElementById("filtro-data-inicio").value;
+  const dataFim = document.getElementById("filtro-data-fim").value;
+
+  const chegadas = dadosGlobais.chegadas || {};
+  let lista = chegadas.lista || [];
+  if (fornecedor) lista = lista.filter(function (l) { return l.fornecedor === fornecedor; });
+  if (origem) lista = lista.filter(function (l) { return l.origem === origem; });
+  if (curral) lista = lista.filter(function (l) { return l.curral === curral; });
+  if (mes) lista = lista.filter(function (l) { return rotuloMes(l.data) === mes; });
+  if (dataInicio) {
+    const inicio = new Date(dataInicio + "T00:00:00");
+    lista = lista.filter(function (l) { return new Date(l.data) >= inicio; });
+  }
+  if (dataFim) {
+    const fim = new Date(dataFim + "T23:59:59");
+    lista = lista.filter(function (l) { return new Date(l.data) <= fim; });
+  }
+
+  renderTabelaChegadas(lista);
+
+  const resumo = chegadas.resumo || {};
+  document.getElementById("kpi-chegadas-total").textContent = (resumo.totalUltimos30Dias || 0).toLocaleString("pt-BR");
+  document.getElementById("kpi-chegadas-lancamentos").textContent = resumo.lancamentosUltimos30Dias || 0;
+  document.getElementById("kpi-chegadas-morbidade").textContent = resumo.comMorbidadeUltimos30Dias || 0;
+}
+
+// ---------- AGREGAÇÕES (client-side, respeitam os filtros ativos) ----------
+
+function agregarPorMes(lista) {
+  const mapa = {};
+  const ordem = [];
+  lista.forEach(function (l) {
+    const mes = l.mes || "";
+    if (!mes) return;
+    if (!(mes in mapa)) { mapa[mes] = 0; ordem.push(mes); }
+    mapa[mes] += Number(l.qtde) || 0;
+  });
+  return ordem.map(function (mes) { return { mes: mes, qtde: mapa[mes] }; });
+}
+
+function inicioDaSemanaJS(data) {
+  const d = new Date(data.getFullYear(), data.getMonth(), data.getDate());
+  const diaSemana = d.getDay();
+  const deslocamento = diaSemana === 0 ? -6 : 1 - diaSemana;
+  d.setDate(d.getDate() + deslocamento);
+  return d;
+}
+
+function agregarPorSemana(lista) {
+  const mapa = {};
+  const chaves = [];
+  lista.forEach(function (l) {
+    const data = new Date(l.dataEmbarque);
+    if (isNaN(data)) return;
+    const inicio = inicioDaSemanaJS(data);
+    const chave = inicio.getTime();
+    if (!(chave in mapa)) { mapa[chave] = { inicio: inicio, qtde: 0 }; chaves.push(chave); }
+    mapa[chave].qtde += Number(l.qtde) || 0;
+  });
+  chaves.sort(function (a, b) { return a - b; });
+  return chaves.map(function (chave) {
+    const item = mapa[chave];
+    const fim = new Date(item.inicio.getTime());
+    fim.setDate(fim.getDate() + 6);
+    return { inicio: item.inicio, fim: fim, qtde: item.qtde };
+  });
+}
+
+// ---------- RENDER ----------
+
+function renderOcupacaoBase(dados) {
   const resumo = dados.resumo || {};
   const capacidadeTotal = resumo.capacidadeTotal || 0;
   const ocupadoTotal = resumo.ocupadoTotal || 0;
@@ -480,35 +783,6 @@ function renderOcupacao(dados) {
       .join("");
   }
 
-  const tabelaOcupados = document.getElementById("tabela-currais-ocupados");
-  const curraisOcupados = dados.curraisOcupados || [];
-  if (curraisOcupados.length === 0) {
-    tabelaOcupados.innerHTML = '<tr><td colspan="3" class="vazio-lista">Sem dados.</td></tr>';
-  } else {
-    const statusClasse = {
-      "Ocupado": "ocupado",
-      "Quase cheio": "quase-cheio",
-      "Superlotado": "superlotado"
-    };
-    tabelaOcupados.innerHTML = curraisOcupados
-      .map(function (c) {
-        const pct = Math.round((c.percentual || 0) * 100);
-        const alertaClasse = pct >= 100 ? " alerta-super" : (pct >= 95 ? " alerta-cheio" : "");
-        const badgeClasse = statusClasse[c.status] || "ocupado";
-        return (
-          "<tr>" +
-          "<td>" + c.curral + "</td>" +
-          '<td><div class="ocupacao-cell' + alertaClasse + '">' +
-            '<span>' + c.ocupado + "/" + Math.round(c.capacidade) + "</span>" +
-            '<div class="mini-barra"><div class="preenchido" style="width:' + Math.min(pct, 100) + '%"></div></div>' +
-          "</div></td>" +
-          '<td><span class="badge ' + badgeClasse + '">' + c.status + "</span></td>" +
-          "</tr>"
-        );
-      })
-      .join("");
-  }
-
   const tabelaVazios = document.getElementById("tabela-currais-vazios");
   const curraisVazios = dados.curraisVazios || [];
   if (curraisVazios.length === 0) {
@@ -522,69 +796,119 @@ function renderOcupacao(dados) {
   }
 }
 
-function renderEscala(dados) {
-  const escala = dados.escala || {};
+function renderTabelaCurraisOcupados(lista) {
+  const tabelaOcupados = document.getElementById("tabela-currais-ocupados");
+  if (lista.length === 0) {
+    tabelaOcupados.innerHTML = '<tr><td colspan="4" class="vazio-lista">Nenhum curral encontrado com esse filtro.</td></tr>';
+    return;
+  }
+  const statusClasse = {
+    "Ocupado": "ocupado",
+    "Quase cheio": "quase-cheio",
+    "Superlotado": "superlotado"
+  };
+  tabelaOcupados.innerHTML = lista
+    .map(function (c) {
+      const pct = Math.round((c.percentual || 0) * 100);
+      const alertaClasse = pct >= 100 ? " alerta-super" : (pct >= 95 ? " alerta-cheio" : "");
+      const badgeClasse = statusClasse[c.status] || "ocupado";
+      return (
+        "<tr>" +
+        "<td>" + c.curral + "</td>" +
+        '<td><div class="ocupacao-cell' + alertaClasse + '">' +
+          '<span>' + c.ocupado + "/" + Math.round(c.capacidade) + "</span>" +
+          '<div class="mini-barra"><div class="preenchido" style="width:' + Math.min(pct, 100) + '%"></div></div>' +
+        "</div></td>" +
+        "<td>" + (c.dieta || "-") + "</td>" +
+        '<td><span class="badge ' + badgeClasse + '">' + c.status + "</span></td>" +
+        "</tr>"
+      );
+    })
+    .join("");
+}
 
-  // Total por mês
+function renderTotalPorMes(porMes) {
   const mesLista = document.getElementById("mes-lista");
-  const porMes = escala.porMes || [];
   if (porMes.length === 0) {
     mesLista.innerHTML = '<div class="vazio-lista">Sem dados.</div>';
-  } else {
-    mesLista.innerHTML = porMes
-      .map(function (m) {
-        return '<div class="mes-chip"><b>' + Number(m.qtde).toLocaleString("pt-BR") + '</b> — ' + m.mes + '</div>';
-      })
-      .join("");
+    return;
   }
+  mesLista.innerHTML = porMes
+    .map(function (m) {
+      return '<div class="mes-chip"><b>' + Number(m.qtde).toLocaleString("pt-BR") + '</b> — ' + m.mes + '</div>';
+    })
+    .join("");
+}
 
-  // Quantidade por semana
+function renderPorSemana(porSemana) {
   const tabelaSemanas = document.getElementById("tabela-semanas");
-  const porSemana = escala.porSemana || [];
   if (porSemana.length === 0) {
     tabelaSemanas.innerHTML = '<tr><td colspan="2" class="vazio-lista">Sem dados.</td></tr>';
-  } else {
-    const maxSemana = Math.max.apply(null, porSemana.map(function (s) { return s.qtde; }));
-    tabelaSemanas.innerHTML = porSemana
-      .map(function (s) {
-        const pct = maxSemana > 0 ? Math.round((s.qtde / maxSemana) * 100) : 0;
-        const label = formatarData(s.inicio) + " a " + formatarData(s.fim);
-        return (
-          "<tr><td>" + label + "</td><td>" +
-          '<div class="barra-semana"><div class="trilha"><div class="preenchido" style="width:' + pct + '%"></div></div>' +
-          '<span class="qtd">' + Number(s.qtde).toLocaleString("pt-BR") + '</span></div>' +
-          "</td></tr>"
-        );
-      })
-      .join("");
+    return;
   }
+  const maxSemana = Math.max.apply(null, porSemana.map(function (s) { return s.qtde; }));
+  tabelaSemanas.innerHTML = porSemana
+    .map(function (s) {
+      const pct = maxSemana > 0 ? Math.round((s.qtde / maxSemana) * 100) : 0;
+      const label = formatarData(s.inicio) + " a " + formatarData(s.fim);
+      return (
+        "<tr><td>" + label + "</td><td>" +
+        '<div class="barra-semana"><div class="trilha"><div class="preenchido" style="width:' + pct + '%"></div></div>' +
+        '<span class="qtd">' + Number(s.qtde).toLocaleString("pt-BR") + '</span></div>' +
+        "</td></tr>"
+      );
+    })
+    .join("");
+}
 
-  // Dia a dia
+function renderTabelaChegadas(lista) {
+  const tabelaChegadas = document.getElementById("tabela-chegadas");
+  if (lista.length === 0) {
+    tabelaChegadas.innerHTML = '<tr><td colspan="7" class="vazio-lista">Nenhuma chegada encontrada com esse filtro.</td></tr>';
+    return;
+  }
+  tabelaChegadas.innerHTML = lista
+    .map(function (l) {
+      return (
+        "<tr>" +
+        "<td>" + formatarData(l.data) + "</td>" +
+        "<td>" + (l.fornecedor || "-") + "</td>" +
+        "<td>" + l.quantidade + "</td>" +
+        "<td>" + (l.curral || "-") + "</td>" +
+        "<td>" + (l.morbidade || "-") + "</td>" +
+        "<td>" + (l.responsavel || "-") + "</td>" +
+        "<td>" + (l.origem || "-") + "</td>" +
+        "</tr>"
+      );
+    })
+    .join("");
+}
+
+function renderTabelaDiaADia(lista) {
   const tabelaDiaADia = document.getElementById("tabela-dia-a-dia");
-  const diaADia = escala.diaADia || [];
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
-  if (diaADia.length === 0) {
-    tabelaDiaADia.innerHTML = '<tr><td colspan="6" class="vazio-lista">Sem dados.</td></tr>';
-  } else {
-    tabelaDiaADia.innerHTML = diaADia
-      .map(function (l) {
-        const dataEmb = new Date(l.dataEmbarque);
-        const classe = !isNaN(dataEmb) && dataEmb < hoje ? " linha-passada" : "";
-        return (
-          '<tr class="' + classe.trim() + '">' +
-          "<td>" + formatarData(l.dataEmbarque) + "</td>" +
-          "<td>" + formatarData(l.dataAbate) + "</td>" +
-          "<td>" + (l.categoria || "-") + "</td>" +
-          "<td>" + (l.qtde || "-") + "</td>" +
-          "<td>" + (l.mercado || "-") + "</td>" +
-          "<td>" + (l.destino || "-") + "</td>" +
-          "</tr>"
-        );
-      })
-      .join("");
+  if (lista.length === 0) {
+    tabelaDiaADia.innerHTML = '<tr><td colspan="6" class="vazio-lista">Nenhum embarque encontrado com esse filtro.</td></tr>';
+    return;
   }
+  tabelaDiaADia.innerHTML = lista
+    .map(function (l) {
+      const dataEmb = new Date(l.dataEmbarque);
+      const classe = !isNaN(dataEmb) && dataEmb < hoje ? " linha-passada" : "";
+      return (
+        '<tr class="' + classe.trim() + '">' +
+        "<td>" + formatarData(l.dataEmbarque) + "</td>" +
+        "<td>" + formatarData(l.dataAbate) + "</td>" +
+        "<td>" + (l.categoria || "-") + "</td>" +
+        "<td>" + (l.qtde || "-") + "</td>" +
+        "<td>" + (l.mercado || "-") + "</td>" +
+        "<td>" + (l.destino || "-") + "</td>" +
+        "</tr>"
+      );
+    })
+    .join("");
 }
 
 function formatarData(valor) {
