@@ -165,6 +165,13 @@
   .semaforo-item.atrasados { border-left: 4px solid var(--vermelho); }
   .semaforo-item.atrasados .num { color: var(--vermelho); }
 
+  tr.linha-adaptando td:first-child { border-left: 4px solid #7FB3D5; }
+  tr.linha-transicao td:first-child { border-left: 4px solid #F4D03F; }
+  tr.linha-engordando td:first-child { border-left: 4px solid var(--verde); }
+  tr.linha-prontos td:first-child { border-left: 4px solid var(--laranja); }
+  tr.linha-atrasados td:first-child { border-left: 4px solid var(--vermelho); }
+  tr.linha-atrasados td { color: var(--vermelho); font-weight: 600; }
+
   .ocupacao-cell { display: flex; align-items: center; gap: 8px; min-width: 140px; }
   .ocupacao-cell .mini-barra { flex: 1; height: 6px; border-radius: 3px; background: var(--borda); overflow: hidden; }
   .ocupacao-cell .mini-barra .preenchido { height: 100%; background: var(--verde); }
@@ -257,7 +264,16 @@
 
     <section>
       <h2>Estágio de Confinamento</h2>
-      <div class="semaforo-grid" id="semaforo-grid"></div>
+      <div class="toggle-tabela">
+        <table>
+          <thead>
+            <tr><th>Estágio</th><th>Faixa (dias)</th><th>Nº Lotes</th><th>Nº Animais</th><th>% dos Animais</th></tr>
+          </thead>
+          <tbody id="tabela-semaforo">
+            <tr><td colspan="5" class="vazio-lista">Sem dados.</td></tr>
+          </tbody>
+        </table>
+      </div>
     </section>
 
     <section>
@@ -268,12 +284,24 @@
     </section>
 
     <section>
-      <h2>Currais</h2>
+      <h2>Currais Ocupados</h2>
       <div class="toggle-tabela">
         <table>
           <thead><tr><th>Curral</th><th>Ocupação</th><th>Status</th></tr></thead>
-          <tbody id="tabela-currais">
+          <tbody id="tabela-currais-ocupados">
             <tr><td colspan="3" class="vazio-lista">Sem dados.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Currais Vazios</h2>
+      <div class="toggle-tabela">
+        <table>
+          <thead><tr><th>Curral</th><th>Capacidade</th></tr></thead>
+          <tbody id="tabela-currais-vazios">
+            <tr><td colspan="2" class="vazio-lista">Sem dados.</td></tr>
           </tbody>
         </table>
       </div>
@@ -322,7 +350,7 @@
 
 <script>
 // ⚠️ Cole aqui a URL do App da Web publicado no Apps Script
-const API_URL = "https://script.google.com/macros/s/AKfycbwYrraS4nFWZPBu5aVOfmo52gzzzescUMXhii88H_f-EMsIz3XuJq66u_HVosLjN8t3EQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyJ7AMJD_aT9WkSgN2PuU9tv9ZLyhz4rMQNrjlKXqjSfZn3_6hTnhZy-OfP48FoEM4vwQ/exec";
 
 function mudarAba(pagina) {
   document.querySelectorAll(".pagina").forEach(function (el) {
@@ -384,8 +412,9 @@ function renderOcupacao(dados) {
     alertaContainer.innerHTML = "";
   }
 
-  const semaforoGrid = document.getElementById("semaforo-grid");
-  const semaforo = dados.semaforo || [];
+  const tabelaSemaforo = document.getElementById("tabela-semaforo");
+  const semaforo = dados.semaforo || {};
+  const estagios = semaforo.estagios || [];
   const classePorEstagio = {
     "Adaptando": "adaptando",
     "Em transição": "transicao",
@@ -393,18 +422,49 @@ function renderOcupacao(dados) {
     "Prontos p/ abate": "prontos",
     "Atrasados p/ abate": "atrasados"
   };
-  semaforoGrid.innerHTML = semaforo
+  let linhasSemaforo = estagios
     .map(function (s) {
-      const classe = classePorEstagio[s.estagio] || "";
       return (
-        '<div class="semaforo-item ' + classe + '">' +
-        '<div class="nome">' + s.estagio + '</div>' +
-        '<div class="num">' + s.nAnimais.toLocaleString("pt-BR") + '</div>' +
-        '<div class="sub">' + s.nLotes + ' lote(s)</div>' +
-        '</div>'
+        '<tr class="linha-' + (classePorEstagio[s.estagio] || "") + '">' +
+        "<td>" + s.estagio + "</td>" +
+        "<td>" + s.faixaDias + "</td>" +
+        "<td>" + s.nLotes + "</td>" +
+        "<td>" + s.nAnimais.toLocaleString("pt-BR") + "</td>" +
+        "<td>" + s.percentual.toFixed(1) + "%</td>" +
+        "</tr>"
       );
     })
     .join("");
+
+  if (semaforo.subtotalGarrote) {
+    const sg = semaforo.subtotalGarrote;
+    linhasSemaforo += (
+      "<tr style='font-weight:600'><td colspan='2'>Subtotal Garrote</td>" +
+      "<td>" + sg.nLotes + "</td>" +
+      "<td>" + sg.nAnimais.toLocaleString("pt-BR") + "</td>" +
+      "<td>" + sg.percentual.toFixed(1) + "%</td></tr>"
+    );
+  }
+  if (semaforo.tourinhos) {
+    const t = semaforo.tourinhos;
+    linhasSemaforo += (
+      "<tr><td>Tourinhos (categoria à parte)</td>" +
+      "<td>" + t.faixaDias + "</td>" +
+      "<td>" + t.nLotes + "</td>" +
+      "<td>" + t.nAnimais.toLocaleString("pt-BR") + "</td>" +
+      "<td>" + t.percentual.toFixed(1) + "%</td></tr>"
+    );
+  }
+  if (semaforo.totalGeral) {
+    const tg = semaforo.totalGeral;
+    linhasSemaforo += (
+      "<tr style='font-weight:700'><td colspan='2'>Total Geral (todos os animais)</td>" +
+      "<td>" + tg.nLotes + "</td>" +
+      "<td>" + tg.nAnimais.toLocaleString("pt-BR") + "</td>" +
+      "<td>100,0%</td></tr>"
+    );
+  }
+  tabelaSemaforo.innerHTML = linhasSemaforo || '<tr><td colspan="5" class="vazio-lista">Sem dados.</td></tr>';
 
   const dietasLista = document.getElementById("dietas-lista");
   const porDieta = resumo.porDieta || {};
@@ -420,18 +480,17 @@ function renderOcupacao(dados) {
       .join("");
   }
 
-  const tabelaCurrais = document.getElementById("tabela-currais");
-  const currais = dados.currais || [];
-  if (currais.length === 0) {
-    tabelaCurrais.innerHTML = '<tr><td colspan="3" class="vazio-lista">Sem dados.</td></tr>';
+  const tabelaOcupados = document.getElementById("tabela-currais-ocupados");
+  const curraisOcupados = dados.curraisOcupados || [];
+  if (curraisOcupados.length === 0) {
+    tabelaOcupados.innerHTML = '<tr><td colspan="3" class="vazio-lista">Sem dados.</td></tr>';
   } else {
     const statusClasse = {
-      "Vazio": "vazio",
       "Ocupado": "ocupado",
       "Quase cheio": "quase-cheio",
       "Superlotado": "superlotado"
     };
-    tabelaCurrais.innerHTML = currais
+    tabelaOcupados.innerHTML = curraisOcupados
       .map(function (c) {
         const pct = Math.round((c.percentual || 0) * 100);
         const alertaClasse = pct >= 100 ? " alerta-super" : (pct >= 95 ? " alerta-cheio" : "");
@@ -446,6 +505,18 @@ function renderOcupacao(dados) {
           '<td><span class="badge ' + badgeClasse + '">' + c.status + "</span></td>" +
           "</tr>"
         );
+      })
+      .join("");
+  }
+
+  const tabelaVazios = document.getElementById("tabela-currais-vazios");
+  const curraisVazios = dados.curraisVazios || [];
+  if (curraisVazios.length === 0) {
+    tabelaVazios.innerHTML = '<tr><td colspan="2" class="vazio-lista">Nenhum curral vazio.</td></tr>';
+  } else {
+    tabelaVazios.innerHTML = curraisVazios
+      .map(function (c) {
+        return "<tr><td>" + c.curral + "</td><td>" + Math.round(c.capacidade) + "</td></tr>";
       })
       .join("");
   }
