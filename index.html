@@ -410,15 +410,15 @@
 
     <div class="kpis">
       <div class="kpi destaque">
-        <div class="label">Animais Recebidos (30 dias)</div>
+        <div class="label" id="kpi-chegadas-total-label">Animais Recebidos (30 dias)</div>
         <div class="valor" id="kpi-chegadas-total">—</div>
       </div>
       <div class="kpi">
-        <div class="label">Lançamentos (30 dias)</div>
+        <div class="label" id="kpi-chegadas-lancamentos-label">Lançamentos (30 dias)</div>
         <div class="valor" id="kpi-chegadas-lancamentos">—</div>
       </div>
       <div class="kpi">
-        <div class="label">Com Morbidade (30 dias)</div>
+        <div class="label" id="kpi-chegadas-morbidade-label">Com Morbidade (30 dias)</div>
         <div class="valor" id="kpi-chegadas-morbidade">—</div>
       </div>
     </div>
@@ -643,10 +643,29 @@ function aplicarFiltrosChegadas() {
 
   renderTabelaChegadas(lista);
 
-  const resumo = chegadas.resumo || {};
-  document.getElementById("kpi-chegadas-total").textContent = (resumo.totalUltimos30Dias || 0).toLocaleString("pt-BR");
-  document.getElementById("kpi-chegadas-lancamentos").textContent = resumo.lancamentosUltimos30Dias || 0;
-  document.getElementById("kpi-chegadas-morbidade").textContent = resumo.comMorbidadeUltimos30Dias || 0;
+  const algumFiltroAtivo = !!(fornecedor || origem || curral || mes || dataInicio || dataFim);
+
+  if (algumFiltroAtivo) {
+    const totalAnimais = lista.reduce(function (soma, l) { return soma + (Number(l.quantidade) || 0); }, 0);
+    const totalMorbidade = lista.filter(function (l) { return l.morbidade && l.morbidade !== "-"; }).length;
+
+    document.getElementById("kpi-chegadas-total").textContent = totalAnimais.toLocaleString("pt-BR");
+    document.getElementById("kpi-chegadas-lancamentos").textContent = lista.length;
+    document.getElementById("kpi-chegadas-morbidade").textContent = totalMorbidade;
+
+    document.getElementById("kpi-chegadas-total-label").textContent = "Animais Recebidos (filtro)";
+    document.getElementById("kpi-chegadas-lancamentos-label").textContent = "Lançamentos (filtro)";
+    document.getElementById("kpi-chegadas-morbidade-label").textContent = "Com Morbidade (filtro)";
+  } else {
+    const resumo = chegadas.resumo || {};
+    document.getElementById("kpi-chegadas-total").textContent = (resumo.totalUltimos30Dias || 0).toLocaleString("pt-BR");
+    document.getElementById("kpi-chegadas-lancamentos").textContent = resumo.lancamentosUltimos30Dias || 0;
+    document.getElementById("kpi-chegadas-morbidade").textContent = resumo.comMorbidadeUltimos30Dias || 0;
+
+    document.getElementById("kpi-chegadas-total-label").textContent = "Animais Recebidos (30 dias)";
+    document.getElementById("kpi-chegadas-lancamentos-label").textContent = "Lançamentos (30 dias)";
+    document.getElementById("kpi-chegadas-morbidade-label").textContent = "Com Morbidade (30 dias)";
+  }
 }
 
 // ---------- AGREGAÇÕES (client-side, respeitam os filtros ativos) ----------
